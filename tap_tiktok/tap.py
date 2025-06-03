@@ -21,12 +21,15 @@ from tap_tiktok.streams import (
     AdGroupsPageEventMetricsByDayStream,
     CampaignsAttributeMetricsStream,
     CampaignsBasicDataMetricsByDayStream,
+    CampaignsBasicDataMetricsByCountryStream,
     CampaignsVideoPlayMetricsByDayStream,
     CampaignsEngagementMetricsByDayStream,
     CampaignsAttributionMetricsByDayStream,
     CampaignsPageEventMetricsByDayStream,
-    CampaignsInAppEventMetricsByDayStream
+    CampaignsPageEventMetricsByCountryStream,
+    CampaignsInAppEventMetricsByDayStream,
 )
+
 STREAM_TYPES = [
     AdAccountsStream,
     CampaignsStream,
@@ -43,16 +46,19 @@ STREAM_TYPES = [
     AdGroupsPageEventMetricsByDayStream,
     CampaignsAttributeMetricsStream,
     CampaignsBasicDataMetricsByDayStream,
+    CampaignsBasicDataMetricsByCountryStream,
     CampaignsVideoPlayMetricsByDayStream,
     CampaignsEngagementMetricsByDayStream,
     CampaignsAttributionMetricsByDayStream,
     CampaignsPageEventMetricsByDayStream,
-    CampaignsInAppEventMetricsByDayStream
+    CampaignsPageEventMetricsByCountryStream,
+    CampaignsInAppEventMetricsByDayStream,
 ]
 
 
 class TapTikTok(Tap):
     """TikTok tap class."""
+
     name = "tap-tiktok"
 
     config_jsonschema = th.PropertiesList(
@@ -60,25 +66,22 @@ class TapTikTok(Tap):
             "access_token",
             th.StringType,
             required=True,
-            description="The token to authenticate against the API service"
+            description="The token to authenticate against the API service",
         ),
         th.Property(
-            "advertiser_id",
-            th.StringType,
-            required=True,
-            description="Advertiser ID"
+            "advertiser_id", th.StringType, required=True, description="Advertiser ID"
         ),
         th.Property(
             "start_date",
             th.DateTimeType,
-            description="The earliest record date to sync"
+            description="The earliest record date to sync",
         ),
         th.Property(
             "include_deleted",
             th.BooleanType,
             default=True,
-            description="If true then deleted status entities will also be returned"
-        )
+            description="If true then deleted status entities will also be returned",
+        ),
     ).to_dict()
 
     def discover_streams(self) -> List[Stream]:

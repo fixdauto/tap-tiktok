@@ -340,7 +340,8 @@ class AdsMetricsByDayStream(TikTokReportsStream):
                 ).strftime(DATE_FORMAT),
             }
         return None
-    
+
+
 class AdGroupsMetricsByDayStream(AdsMetricsByDayStream):
     data_level = "AUCTION_ADGROUP"
     dimensions = ["adgroup_id", "stat_time_day"]
@@ -538,6 +539,21 @@ class CampaignsBasicDataMetricsByDayStream(CampaignMetricsByDayStream):
     properties = [
         th.Property("campaign_id", th.StringType),
         th.Property("stat_time_day", th.DateTimeType),
+    ]
+    properties += [th.Property(metric, th.StringType) for metric in BASIC_DATA_METRICS]
+    schema = th.PropertiesList(*properties).to_dict()
+
+class CampaignsBasicDataMetricsByCountryStream(CampaignMetricsByDayStream):
+    name = "campaigns_basic_data_metrics_by_country"
+    status_field = "campaign_status"
+    tiktok_metrics = BASIC_DATA_METRICS
+    path = "/"
+    primary_keys = ["campaign_id", "stat_time_day", "country_code"]
+    replication_key = "stat_time_day"
+    properties = [
+        th.Property("campaign_id", th.StringType),
+        th.Property("stat_time_day", th.DateTimeType),
+        th.Property("country_code", th.StringType),
     ]
     properties += [th.Property(metric, th.StringType) for metric in BASIC_DATA_METRICS]
     schema = th.PropertiesList(*properties).to_dict()
@@ -791,6 +807,21 @@ class CampaignsPageEventMetricsByDayStream(CampaignMetricsByDayStream):
     properties = [
         th.Property("campaign_id", th.StringType),
         th.Property("stat_time_day", th.DateTimeType),
+    ]
+    properties += [th.Property(metric, th.StringType) for metric in PAGE_EVENT_METRICS]
+    schema = th.PropertiesList(*properties).to_dict()
+
+class CampaignsPageEventMetricsByCountryStream(CampaignMetricsByDayStream):
+    name = "campaigns_page_event_metrics_by_country"
+    status_field = "campaign_status"
+    tiktok_metrics = PAGE_EVENT_METRICS
+    path = "/"
+    primary_keys = ["campaign_id", "stat_time_day", "country_code"]
+    replication_key = "stat_time_day"
+    properties = [
+        th.Property("campaign_id", th.StringType),
+        th.Property("stat_time_day", th.DateTimeType),
+        th.Property("country_code", th.StringType),
     ]
     properties += [th.Property(metric, th.StringType) for metric in PAGE_EVENT_METRICS]
     schema = th.PropertiesList(*properties).to_dict()
