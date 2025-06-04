@@ -353,6 +353,11 @@ class CampaignMetricsByDayStream(AdsMetricsByDayStream):
     dimensions = ["campaign_id", "stat_time_day"]
     status_field = "campaign_status"
 
+class CampaignMetricsByCountryStream(AdsMetricsByDayStream):
+    data_level = "AUCTION_CAMPAIGN"
+    dimensions = ["campaign_id", "stat_time_day", "country_code"]
+    status_field = "campaign_status"
+
 
 ATTRIBUTE_METRICS = [
     "campaign_name",
@@ -543,7 +548,7 @@ class CampaignsBasicDataMetricsByDayStream(CampaignMetricsByDayStream):
     properties += [th.Property(metric, th.StringType) for metric in BASIC_DATA_METRICS]
     schema = th.PropertiesList(*properties).to_dict()
 
-class CampaignsBasicDataMetricsByCountryStream(CampaignMetricsByDayStream):
+class CampaignsBasicDataMetricsByCountryStream(CampaignMetricsByCountryStream):
     name = "campaigns_basic_data_metrics_by_country"
     status_field = "campaign_status"
     tiktok_metrics = BASIC_DATA_METRICS
@@ -811,7 +816,7 @@ class CampaignsPageEventMetricsByDayStream(CampaignMetricsByDayStream):
     properties += [th.Property(metric, th.StringType) for metric in PAGE_EVENT_METRICS]
     schema = th.PropertiesList(*properties).to_dict()
 
-class CampaignsPageEventMetricsByCountryStream(CampaignMetricsByDayStream):
+class CampaignsPageEventMetricsByCountryStream(CampaignMetricsByCountryStream):
     name = "campaigns_page_event_metrics_by_country"
     status_field = "campaign_status"
     tiktok_metrics = PAGE_EVENT_METRICS
