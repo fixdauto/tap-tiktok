@@ -250,7 +250,15 @@ STEP_NUM_DAYS = 30
 class AdsMetricsByDayStream(TikTokReportsStream):
     tiktok_metrics = []
     data_level = "AUCTION_AD"
-    dimensions = ["ad_id", "stat_time_day"]
+    dimensions = [
+        "ad_id",
+        "ad_name",
+        "adgroup_id",
+        "adgroup_name",
+        "campaign_id",
+        "campaign_name",
+        "stat_time_day",
+    ]
 
     status_field = "ad_status"
 
