@@ -522,6 +522,11 @@ class AdsBasicDataMetricsByDayStream(AdsMetricsByDayStream):
     replication_key = "stat_time_day"
     properties = [
         th.Property("ad_id", th.StringType),
+        th.Property("ad_name", th.StringType),
+        th.Property("adgroup_id", th.StringType),
+        th.Property("adgroup_name", th.StringType),
+        th.Property("campaign_id", th.StringType),
+        th.Property("campaign_name", th.StringType),
         th.Property("stat_time_day", th.DateTimeType),
     ]
     properties += [th.Property(metric, th.StringType) for metric in BASIC_DATA_METRICS]
@@ -536,6 +541,9 @@ class AdGroupsBasicDataMetricsByDayStream(AdGroupsMetricsByDayStream):
     replication_key = "stat_time_day"
     properties = [
         th.Property("adgroup_id", th.StringType),
+        th.Property("adgroup_name", th.StringType),
+        th.Property("campaign_id", th.StringType),
+        th.Property("campaign_name", th.StringType),
         th.Property("stat_time_day", th.DateTimeType),
     ]
     properties += [th.Property(metric, th.StringType) for metric in BASIC_DATA_METRICS]
@@ -789,6 +797,11 @@ class AdsPageEventMetricsByDayStream(AdsMetricsByDayStream):
     replication_key = "stat_time_day"
     properties = [
         th.Property("ad_id", th.StringType),
+        th.Property("ad_name", th.StringType),
+        th.Property("adgroup_id", th.StringType),
+        th.Property("adgroup_name", th.StringType),
+        th.Property("campaign_id", th.StringType),
+        th.Property("campaign_name", th.StringType),
         th.Property("stat_time_day", th.DateTimeType),
     ]
     properties += [th.Property(metric, th.StringType) for metric in PAGE_EVENT_METRICS]
@@ -804,6 +817,9 @@ class AdGroupsPageEventMetricsByDayStream(AdGroupsMetricsByDayStream):
     replication_key = "stat_time_day"
     properties = [
         th.Property("adgroups_id", th.StringType),
+        th.Property("adgroups_name", th.StringType),
+        th.Property("campaign_id", th.StringType),
+        th.Property("campaign_name", th.StringType),
         th.Property("stat_time_day", th.DateTimeType),
     ]
     properties += [th.Property(metric, th.StringType) for metric in PAGE_EVENT_METRICS]
