@@ -511,6 +511,18 @@ BASIC_DATA_METRICS = [
     "cost_per_secondary_goal_result",
     "secondary_goal_result_rate",
     "frequency",
+    "web_event_add_to_cart",
+    "initiate_checkout",
+    "video_views_p25",
+    "video_views_p50",
+    "video_views_p75",
+    "video_views_p100",
+    "average_video_play",
+    "shares",
+    "follows",
+    "likes",
+    "comments",
+    "profile_visits"
 ]
 
 
