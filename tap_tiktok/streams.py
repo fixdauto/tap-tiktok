@@ -516,7 +516,8 @@ BASIC_DATA_METRICS = [
     "follows",
     "likes",
     "comments",
-    "profile_visits"
+    "profile_visits",
+    "total_landing_page_view"
 ]
 
 
