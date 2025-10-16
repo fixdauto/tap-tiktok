@@ -252,11 +252,6 @@ class AdsMetricsByDayStream(TikTokReportsStream):
     data_level = "AUCTION_AD"
     dimensions = [
         "ad_id",
-        "ad_name",
-        "adgroup_id",
-        "adgroup_name",
-        "campaign_id",
-        "campaign_name",
         "stat_time_day",
     ]
 
@@ -308,7 +303,6 @@ class AdsMetricsByDayStream(TikTokReportsStream):
         self.logger.info(f"params are: {params}")
         if next_page_token:
             params["page"] = next_page_token["page"]
-
         return params
 
     @staticmethod
@@ -534,11 +528,6 @@ class AdsBasicDataMetricsByDayStream(AdsMetricsByDayStream):
     replication_key = "stat_time_day"
     properties = [
         th.Property("ad_id", th.StringType),
-        th.Property("ad_name", th.StringType),
-        th.Property("adgroup_id", th.StringType),
-        th.Property("adgroup_name", th.StringType),
-        th.Property("campaign_id", th.StringType),
-        th.Property("campaign_name", th.StringType),
         th.Property("stat_time_day", th.DateTimeType),
     ]
     properties += [th.Property(metric, th.StringType) for metric in BASIC_DATA_METRICS]
