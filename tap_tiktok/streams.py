@@ -361,6 +361,111 @@ class CampaignMetricsByCountryStream(AdsMetricsByDayStream):
     status_field = "campaign_status"
 
 
+# Hourly report step: use 1 day to avoid oversized responses (hourly = 24x rows per day)
+STEP_NUM_DAYS_HOUR = 1
+
+
+class AdsMetricsByHourStream(TikTokReportsStream):
+    """Base stream for ad-level reports with stat_time_hour dimension."""
+
+    tiktok_metrics = []
+    data_level = "AUCTION_AD"
+    dimensions = [
+        "ad_id",
+        "stat_time_hour",
+    ]
+    status_field = "ad_status"
+
+    def get_url_params(
+        self, context: Optional[dict], next_page_token: Optional[Any]
+    ) -> Dict[str, Any]:
+        """Return a dictionary of values to be used in URL parameterization."""
+        if (
+            isinstance(next_page_token, dict)
+            and next_page_token.get("start_date") is not None
+        ):
+            start_date = datetime.datetime.strptime(
+                next_page_token["start_date"], DATE_FORMAT
+            )
+        else:
+            start_date = self.get_starting_timestamp(context)
+        yesterday = datetime.datetime.now(tz=start_date.tzinfo) - datetime.timedelta(
+            days=1
+        )
+        end_date = min(
+            start_date + datetime.timedelta(days=STEP_NUM_DAYS_HOUR), yesterday
+        )
+        params: dict = {
+            "page_size": 10,
+            "advertiser_id": self.config.get("advertiser_id"),
+            "service_type": "AUCTION",
+            "report_type": "BASIC",
+            "data_level": self.data_level,
+            "dimensions": json.dumps(self.dimensions),
+            "metrics": json.dumps(self.tiktok_metrics),
+            "start_date": start_date.strftime(DATE_FORMAT),
+            "end_date": end_date.strftime(DATE_FORMAT),
+            "filtering": json.dumps(
+                [
+                    {
+                        "field_name": self.status_field,
+                        "filter_type": "IN",
+                        "filter_value": json.dumps(
+                            [
+                                "STATUS_ALL"
+                                if self.config.get("include_deleted")
+                                else "STATUS_NOT_DELETE"
+                            ]
+                        ),
+                    }
+                ]
+            ),
+        }
+        self.logger.info(f"params are: {params}")
+        if next_page_token:
+            params["page"] = next_page_token.get("page", 1)
+        return params
+
+    @staticmethod
+    def _get_page_info(json_path, json):
+        page_matches = extract_jsonpath(json_path, json)
+        return next(iter(page_matches), None)
+
+    def get_next_page_token(
+        self, response: requests.Response, previous_token: Optional[Any]
+    ) -> Optional[Any]:
+        """Return a token for identifying next page or None if no more pages."""
+        current_page = (
+            self._get_page_info("$.data.page_info.page", response.json()) or 0
+        )
+        total_pages = (
+            self._get_page_info("$.data.page_info.total_page", response.json()) or 0
+        )
+        query = parse_qs(urlparse(response.request.url).query)
+        start_date = datetime.datetime.strptime(
+            query["start_date"][0], DATE_FORMAT
+        )
+        yesterday = datetime.datetime.now(tz=start_date.tzinfo) - datetime.timedelta(
+            days=1
+        )
+        end_date = datetime.datetime.strptime(
+            query["end_date"][0], DATE_FORMAT
+        )
+        if current_page < total_pages:
+            return {
+                "page": current_page + 1,
+                "start_date": previous_token["start_date"] if previous_token else None,
+            }
+        elif end_date.date() < yesterday.date():
+            return {
+                "page": 1,
+                "start_date": min(
+                    end_date + datetime.timedelta(days=1), yesterday
+                ).strftime(DATE_FORMAT),
+            }
+        return None
+
+
 ATTRIBUTE_METRICS = [
     "campaign_name",
     "objective_type",
@@ -530,6 +635,20 @@ class AdsBasicDataMetricsByDayStream(AdsMetricsByDayStream):
     properties = [
         th.Property("ad_id", th.StringType),
         th.Property("stat_time_day", th.DateTimeType),
+    ]
+    properties += [th.Property(metric, th.StringType) for metric in BASIC_DATA_METRICS]
+    schema = th.PropertiesList(*properties).to_dict()
+
+
+class AdsBasicDataMetricsByHourStream(AdsMetricsByHourStream):
+    name = "ads_basic_data_metrics_by_hour"
+    tiktok_metrics = BASIC_DATA_METRICS
+    path = "/"
+    primary_keys = ["ad_id", "stat_time_hour"]
+    replication_key = "stat_time_hour"
+    properties = [
+        th.Property("ad_id", th.StringType),
+        th.Property("stat_time_hour", th.DateTimeType),
     ]
     properties += [th.Property(metric, th.StringType) for metric in BASIC_DATA_METRICS]
     schema = th.PropertiesList(*properties).to_dict()
@@ -805,6 +924,25 @@ class AdsPageEventMetricsByDayStream(AdsMetricsByDayStream):
         th.Property("campaign_id", th.StringType),
         th.Property("campaign_name", th.StringType),
         th.Property("stat_time_day", th.DateTimeType),
+    ]
+    properties += [th.Property(metric, th.StringType) for metric in PAGE_EVENT_METRICS]
+    schema = th.PropertiesList(*properties).to_dict()
+
+
+class AdsPageEventMetricsByHourStream(AdsMetricsByHourStream):
+    name = "ads_page_event_metrics_by_hour"
+    tiktok_metrics = PAGE_EVENT_METRICS
+    path = "/"
+    primary_keys = ["ad_id", "stat_time_hour"]
+    replication_key = "stat_time_hour"
+    properties = [
+        th.Property("ad_id", th.StringType),
+        th.Property("ad_name", th.StringType),
+        th.Property("adgroup_id", th.StringType),
+        th.Property("adgroup_name", th.StringType),
+        th.Property("campaign_id", th.StringType),
+        th.Property("campaign_name", th.StringType),
+        th.Property("stat_time_hour", th.DateTimeType),
     ]
     properties += [th.Property(metric, th.StringType) for metric in PAGE_EVENT_METRICS]
     schema = th.PropertiesList(*properties).to_dict()
