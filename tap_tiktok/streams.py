@@ -361,7 +361,8 @@ class CampaignMetricsByCountryStream(AdsMetricsByDayStream):
     status_field = "campaign_status"
 
 
-# Hourly report step: use 1 day to avoid oversized responses (hourly = 24x rows per day)
+# Hourly report: API allows max 1-day span when using stat_time_hour.
+# Use same start_date and end_date to request one calendar day at a time.
 STEP_NUM_DAYS_HOUR = 1
 
 
@@ -392,9 +393,9 @@ class AdsMetricsByHourStream(TikTokReportsStream):
         yesterday = datetime.datetime.now(tz=start_date.tzinfo) - datetime.timedelta(
             days=1
         )
-        end_date = min(
-            start_date + datetime.timedelta(days=STEP_NUM_DAYS_HOUR), yesterday
-        )
+        # API 40002: max time span is 1 day when using stat_time_hour — use same day for start and end
+        start_date = min(start_date, yesterday)
+        end_date = start_date
         params: dict = {
             "page_size": 10,
             "advertiser_id": self.config.get("advertiser_id"),
@@ -421,7 +422,7 @@ class AdsMetricsByHourStream(TikTokReportsStream):
                 ]
             ),
         }
-        self.logger.info(f"params are: {params}")
+        # self.logger.info(f"params are: {params}")
         if next_page_token:
             params["page"] = next_page_token.get("page", 1)
         return params
@@ -435,6 +436,7 @@ class AdsMetricsByHourStream(TikTokReportsStream):
         self, response: requests.Response, previous_token: Optional[Any]
     ) -> Optional[Any]:
         """Return a token for identifying next page or None if no more pages."""
+        self.logger.info(f"Response: {response.json()}")
         current_page = (
             self._get_page_info("$.data.page_info.page", response.json()) or 0
         )
@@ -638,6 +640,10 @@ class AdsBasicDataMetricsByDayStream(AdsMetricsByDayStream):
     ]
     properties += [th.Property(metric, th.StringType) for metric in BASIC_DATA_METRICS]
     schema = th.PropertiesList(*properties).to_dict()
+
+    def post_process(self, row: dict, context: Optional[dict] = None) -> Optional[dict]:
+        self.logger.info(f"Row: {row}")
+        return row
 
 
 class AdsBasicDataMetricsByHourStream(AdsMetricsByHourStream):
