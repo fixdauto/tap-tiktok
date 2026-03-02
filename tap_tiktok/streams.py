@@ -641,10 +641,6 @@ class AdsBasicDataMetricsByDayStream(AdsMetricsByDayStream):
     properties += [th.Property(metric, th.StringType) for metric in BASIC_DATA_METRICS]
     schema = th.PropertiesList(*properties).to_dict()
 
-    def post_process(self, row: dict, context: Optional[dict] = None) -> Optional[dict]:
-        self.logger.info(f"Row: {row}")
-        return row
-
 
 class AdsBasicDataMetricsByHourStream(AdsMetricsByHourStream):
     name = "ads_basic_data_metrics_by_hour"
