@@ -543,13 +543,7 @@ class CampaignsAttributeMetricsStream(CampaignMetricsByDayStream):
     primary_keys = ["campaign_id"]
     replication_key = None
     properties = [
-        th.Property("campaign_id", th.IntegerType),
-    ]
-    properties += [
-        th.Property(
-            metric,
-            th.StringType if metric in ["campaign_id", "adgroup_id"] else th.StringType,
-        )
+        th.Property(metric, th.StringType)
         for metric in ATTRIBUTE_METRICS
     ]
     schema = th.PropertiesList(*properties).to_dict()
@@ -952,14 +946,14 @@ class AdsPageEventMetricsByHourStream(AdsMetricsByHourStream):
 
 class AdGroupsPageEventMetricsByDayStream(AdGroupsMetricsByDayStream):
     name = "adgroups_page_event_metrics_by_day"
-    status_field = "adgroups_status"
+    status_field = "adgroup_status"
     tiktok_metrics = PAGE_EVENT_METRICS
     path = "/"
-    primary_keys = ["adgroups_id", "stat_time_day"]
+    primary_keys = ["adgroup_id", "stat_time_day"]
     replication_key = "stat_time_day"
     properties = [
-        th.Property("adgroups_id", th.StringType),
-        th.Property("adgroups_name", th.StringType),
+        th.Property("adgroup_id", th.StringType),
+        th.Property("adgroup_name", th.StringType),
         th.Property("campaign_id", th.StringType),
         th.Property("campaign_name", th.StringType),
         th.Property("stat_time_day", th.DateTimeType),
@@ -1207,15 +1201,18 @@ class AdsInAppEventMetricsByDayStream(AdsMetricsByDayStream):
                 )
                 resp = decorated_request(prepared_request, context)
                 for row in self.parse_response(resp):
+                    dimensions = row.get("dimensions", {})
+                    metrics = row.get("metrics", {})
                     primary_key = tuple(
-                        row["dimensions"][key] for key in self.primary_keys
+                        dimensions.get(key) for key in self.primary_keys
                     )
                     if rows.get(primary_key) is None:
                         rows[primary_key] = row
                     else:
+                        existing_metrics = rows[primary_key].get("metrics", {})
                         rows[primary_key]["metrics"] = {
-                            **row["metrics"],
-                            **rows[primary_key]["metrics"],
+                            **metrics,
+                            **existing_metrics,
                         }
             for row in rows.values():
                 yield row
@@ -1264,15 +1261,18 @@ class CampaignsInAppEventMetricsByDayStream(CampaignMetricsByDayStream):
                 )
                 resp = decorated_request(prepared_request, context)
                 for row in self.parse_response(resp):
+                    dimensions = row.get("dimensions", {})
+                    metrics = row.get("metrics", {})
                     primary_key = tuple(
-                        row["dimensions"][key] for key in self.primary_keys
+                        dimensions.get(key) for key in self.primary_keys
                     )
                     if rows.get(primary_key) is None:
                         rows[primary_key] = row
                     else:
+                        existing_metrics = rows[primary_key].get("metrics", {})
                         rows[primary_key]["metrics"] = {
-                            **row["metrics"],
-                            **rows[primary_key]["metrics"],
+                            **metrics,
+                            **existing_metrics,
                         }
             for row in rows.values():
                 yield row
